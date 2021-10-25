@@ -1,0 +1,91 @@
+jobs:
+  - deployment: Deploy_SQL_DACPAC
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                      
+           
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'stagingdacpac'
+            inputs:              
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbStagingName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/stagingdacpac/Virtuoso.Database.Staging.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'phoenixdacpac'
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbPhoenixName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/phoenixdacpac/Virtuoso.Database.Phoenix.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'VirtuosoBIdacpac'
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbBiName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/VirtuosoBIdacpac/Virtuoso.Database.VirtuosoBI.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'riskrepodacpac'
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbRiskRepoName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/riskrepodacpac/RiskRepo.Database.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'workitemdashboard'
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbWidashboardName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/workitemdashboard/WorkItemDashboard.Database.WorkItemDashboard.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'Azure SQL DacpacTask'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbReportingName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/RoleDashboardDacpac/Virtuoso.Database.RoleDashboard.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'

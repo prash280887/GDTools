@@ -1,0 +1,131 @@
+steps:
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Storage Account ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Storage Account/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Storage Account/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Key Vault ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Key Vault/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Key Vault/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Data Factory ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Data Factory/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Data Factory/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Azure Data Explorer Cluster ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Azure Data Explorer Cluster/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Azure Data Explorer Cluster/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Search Service ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Search Service/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Search Service/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Azure Cache for Redis ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Azure Cache for Redis/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Azure Cache for Redis/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Sql Server ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Sql Server/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Sql Server/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Sql ElasticPool Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Sql ElasticPool/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Sql ElasticPool/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Sql Database Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Sql Database/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Sql Database/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate ApplicationInsights ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/ApplicationInsights/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/ApplicationInsights/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Function App ARM Template'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Function App/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Function App/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Web Job'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Web Job/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Web Job/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Validate Storage Account ARM Template With Configuration'
+    inputs:
+       azureSubscription: "$(serviceConnection)"
+       resourceGroupName: "$(resourceGroupOps)"
+       csmFile: '$(infraTemplatePath)/Storage Account Configuration/deploy.json'
+       csmParametersFile: '$(infraTemplatePath)/Storage Account Configuration/parameters.json'
+       deploymentMode: 'Validation'
+       location: '$(region)'

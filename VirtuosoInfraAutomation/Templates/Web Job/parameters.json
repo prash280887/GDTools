@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webjobserverfarm_name": {
+            "value": "plan-test-virtuoso"
+        },
+        "webjob_name": {
+            "value": "webjobapp-virtuosohotfix"
+        },
+        "ftpState": {
+            "value": "AllAllowed"
+        },
+        "hostNameType": {
+            "value": "Verified"
+        },
+        "loadBalancing": {
+            "value": "LeastRequests"
+        },
+        "location": {
+            "value": "West US"
+        },
+        "managedPipelineMode": {
+            "value": "Integrated"
+        },
+        "scmType": {
+            "value": "None"
+        }
+    }
+}

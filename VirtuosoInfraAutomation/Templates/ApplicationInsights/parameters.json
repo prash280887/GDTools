@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webappappinsightname": {
+            "value": "vwwappitest2"
+        },
+        "webjobappinsightname": {
+            "value": "vwwappitest3"
+        },
+        "requestSource": {
+            "value": "IbizaAIExtension"
+        },
+        "retentionInDays": {
+            "value": "90"
+        }
+    }
+}

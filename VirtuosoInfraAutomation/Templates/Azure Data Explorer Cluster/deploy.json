@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataExplorerClusterName": {
+            "type": "String"
+        },
+        "dataExplorerClusterSkuName": {
+            "type": "String"
+        },
+        "dataExplorerClusterSkuTier": {
+            "type": "String"
+        },
+        "dataExplorerClusterSkuCapacity": {
+            "type": "int"
+        },
+        "location": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "dbname": "[concat('/metricdb',parameters('environment'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Kusto/Clusters",
+            "apiVersion": "2020-09-18",
+            "name": "[parameters('dataExplorerClusterName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('dataExplorerClusterSkuName')]",
+                "tier": "[parameters('dataExplorerClusterSkuTier')]",
+                "capacity": "[parameters('dataExplorerClusterSkuCapacity')]"
+            },
+            "properties": {
+                "trustedExternalTenants": [],
+                "enableDiskEncryption": false,
+                "enableStreamingIngest": false,
+                "enableDoubleEncryption": false,
+                "engineType": "V2"
+            }
+        },
+        {
+            "type": "Microsoft.Kusto/Clusters/Databases",
+            "apiVersion": "2020-09-18",
+            "name": "[concat(parameters('dataExplorerClusterName'), variables('dbname'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Kusto/Clusters', parameters('dataExplorerClusterName'))]"
+            ],
+            "kind": "ReadWrite",
+            "properties": {
+                "hotCachePeriod": "P200D"
+            }
+        }
+    ]
+}

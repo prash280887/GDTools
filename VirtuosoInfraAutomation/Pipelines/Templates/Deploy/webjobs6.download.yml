@@ -1,0 +1,17 @@
+jobs:
+  - job: DownloadArtifacts
+    pool:
+        name: "virtuosoinfra1"
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+            source: "specific"
+            project: "GDTools"
+            pipeline: "$(AppArtifactDefId)"
+            runVersion: "latest"
+            path: "$(System.ArtifactsDirectory)" #'$(Pipeline.Workspace)'.
+
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Artifacts
+        inputs:
+            ArtifactName: DropAppArtifacts

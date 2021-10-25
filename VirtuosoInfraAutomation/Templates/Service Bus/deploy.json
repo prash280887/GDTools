@@ -1,0 +1,2455 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "serviceBusNamespace": {
+      "type": "String"
+    },
+    "environmentType": {
+      "type": "String"
+    },
+    "serviceBusSku": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "The messaging tier for service Bus namespace"
+      }
+    },
+    "location": {
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ServiceBus/namespaces",
+      "apiVersion": "2018-01-01-preview",
+      "name": "[parameters('serviceBusNamespace')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Environment": "Test"
+      },
+      "sku": {
+        "name": "[parameters('serviceBusSku')]",
+        "tier": "[parameters('serviceBusSku')]"
+      },
+      "properties": {
+        "zoneRedundant": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsprofile')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/RootManageSharedAccessKey')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Listen",
+          "Manage",
+          "Send"
+        ]
+      }
+    },
+    {
+      "condition": "[equals(parameters('environmentType'),'prod')]",
+      "type": "Microsoft.ServiceBus/namespaces/networkRuleSets",
+      "apiVersion": "2018-01-01-preview",
+      "name": "[concat(parameters('serviceBusNamespace'), '/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultAction": "Deny",
+        "virtualNetworkRules": [],
+        "ipRules": []
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/actiontopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/changerequestapprovaltopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P7D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": false,
+        "status": "Active",
+        "supportOrdering": false,
+        "autoDeleteOnIdle": "P7D",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/cpsynctopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsprofileassessment')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsworkitemtopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/findingsynctopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": true,
+        "duplicateDetectionHistoryTimeWindow": "PT5M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/nsptopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": false,
+        "status": "Active",
+        "supportOrdering": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/pihtopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/riskfindingsynctopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": false,
+        "status": "Active",
+        "supportOrdering": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/sdevents')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosometricstopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/workitemtopic')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "defaultMessageTimeToLive": "P14D",
+        "maxSizeInMegabytes": 1024,
+        "requiresDuplicateDetection": false,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "enableBatchedOperations": true,
+        "status": "Active",
+        "supportOrdering": true,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": false,
+        "enableExpress": false
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/authorizationRules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/changerequestapprovaltopic/ListenPolicy')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'changerequestapprovaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/authorizationRules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/changerequestapprovaltopic/ManagePolicy')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'changerequestapprovaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Manage",
+          "Listen",
+          "Send"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/authorizationRules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/test')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "rights": [
+          "Manage",
+          "Listen",
+          "Send"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/acradoptionsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/acrmilestonesubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/actiontopic/actionitemsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'actiontopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/backup')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/backup2')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/calculateconsumptionmilestone')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsworkitemtopic/calculatemetricsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'devopsworkitemtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/workitemtopic/calculatemetricsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'workitemtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/CloseSystemAction')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosometricstopic/computationsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosometricstopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/cpsynctopic/cpsyncsubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'cpsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/createsystemaction')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/financialssubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/findingssubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/findingsynctopic/findingsyncsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'findingsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/LeadDMMChangeSubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapBusinessScenario')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P1D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P10675198DT2H48M5.477S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapCOAToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftCOAToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftFindingsToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftRisksToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapPriorityToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapRisksToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapYATReviewToProject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/actiontopic/mobilenotificationsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'actiontopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/pihrolesubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/pihtopic/pihsubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'pihtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/pihsubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/PJMAASChangeSubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/pjmadoptionsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsprofileassessment/profileassessmentsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'devopsprofileassessment')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosometricstopic/rawdatasubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosometricstopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgamendment')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgautoproject')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgreview')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgstatuscheckin')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/riskandissuesubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/riskfindingsynctopic/riskfindingsyncsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'riskfindingsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/sifeedsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/smmirolenotificationsubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/smmirolesubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT30S",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 1,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/statuscheckinsubscription')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT5M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": true,
+        "autoDeleteOnIdle": "P14D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/changerequestapprovaltopic/subscription-aurora-fvr-approval')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'changerequestapprovaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P1D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P7D"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/testnew')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/testnew-hanu')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/TestSub')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/nsptopic/virtuoso')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'nsptopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P10675199DT2H48M5.4775807S",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/Virtuoso')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "lockDuration": "PT1M",
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P14D",
+        "deadLetteringOnMessageExpiration": false,
+        "deadLetteringOnFilterEvaluationExceptions": false,
+        "maxDeliveryCount": 1,
+        "status": "Active",
+        "enableBatchedOperations": false,
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/actiontopic/actionitemsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'actiontopic', 'actionitemsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'actiontopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/actiontopic/mobilenotificationsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'actiontopic', 'mobilenotificationsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'actiontopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/changerequestapprovaltopic/subscription-aurora-fvr-approval/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'changerequestapprovaltopic', 'subscription-aurora-fvr-approval')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'changerequestapprovaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/cpsynctopic/cpsyncsubscriber/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'cpsynctopic', 'cpsyncsubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'cpsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsprofileassessment/profileassessmentsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'devopsprofileassessment', 'profileassessmentsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'devopsprofileassessment')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/devopsworkitemtopic/calculatemetricsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'devopsworkitemtopic', 'calculatemetricsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'devopsworkitemtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/findingsynctopic/findingsyncsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'findingsynctopic', 'findingsyncsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'findingsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapBusinessScenario/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapBusinessScenario')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapPriorityToProject/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapPriorityToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/nsptopic/virtuoso/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'nsptopic', 'virtuoso')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'nsptopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/pihtopic/pihsubscriber/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'pihtopic', 'pihsubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'pihtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgamendment/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'rbdgprioritycalculation', 'rbdgamendment')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgautoproject/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'rbdgprioritycalculation', 'rbdgautoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgreview/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'rbdgprioritycalculation', 'rbdgreview')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/rbdgprioritycalculation/rbdgstatuscheckin/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'rbdgprioritycalculation', 'rbdgstatuscheckin')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'rbdgprioritycalculation')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/riskfindingsynctopic/riskfindingsyncsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'riskfindingsynctopic', 'riskfindingsyncsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'riskfindingsynctopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/PJMAASChangeSubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'PJMAASChangeSubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "RoleId IN (168) AND EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/TestSub/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'TestSub')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/backup/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosotopicforaurora', 'backup')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/backup2/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosotopicforaurora', 'backup2')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/testnew/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosotopicforaurora', 'testnew')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/testnew-hanu/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosotopicforaurora', 'testnew-hanu')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosotopicforaurora/Virtuoso/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosotopicforaurora', 'Virtuoso')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosotopicforaurora')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/workitemtopic/calculatemetricsubscription/default')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'workitemtopic', 'calculatemetricsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'workitemtopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "1=1",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/acradoptionsubscription/ACRAdoption')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'acradoptionsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type='ACRAdoption' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/calculateconsumptionmilestone/acrfilter')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'calculateconsumptionmilestone')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode in (1201,1301,1302,1303) and EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/CloseSystemAction/action')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'CloseSystemAction')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventSource = Virtuoso",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/sifeedsubscription/All')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'sifeedsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/CloseSystemAction/CloseSystemAction')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'CloseSystemAction')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode = 1400",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosometricstopic/computationsubscription/Computation')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosometricstopic', 'computationsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosometricstopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode=3000 AND ActionCode = 'Computation'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/smmirolesubscriber/EventCode')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'smmirolesubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode=2000",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/pihsubscriber/filterrule')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'pihsubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode in (1100,1101,1102,1103,1104,1105,1106,1107,1108,1109) and EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/financialssubscription/Financials')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'financialssubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type = 'Financials' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/findingssubscription/Findings')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'findingssubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type = 'Findings' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/pihrolesubscriber/pihrolesub')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'pihrolesubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode = 1000 AND RoleId IN (175,1,10,146,171,6,181) AND EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/pjmadoptionsubscription/PJMAdoption')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'pjmadoptionsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type = 'PJMAdoption' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/acrmilestonesubscriber/projectcreate')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'acrmilestonesubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode in (1200,1300) and EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosometricstopic/rawdatasubscription/RawDataSync')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosometricstopic', 'rawdatasubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosometricstopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode=3000 AND ActionCode = 'RawDataSync'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/riskandissuesubscription/RiskAndIssue')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'riskandissuesubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type = 'RiskAndIssue' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapCOAToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapCOAToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = false",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftCOAToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapDraftCOAToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = true",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftFindingsToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapDraftFindingsToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = true",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapDraftRisksToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapDraftRisksToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = true",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapRisksToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapRisksToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = false",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/mapfindingstoproject/MapYATReviewToProject/Rule1')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'mapfindingstoproject', 'MapYATReviewToProject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'mapfindingstoproject')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "IsRiskFindingDraftLoad = false",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/smmirolenotificationsubscriber/smmirolenotificationsubscriber')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'smmirolenotificationsubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode = 1000 AND RoleId IN (1,154,163,168)",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/createsystemaction/source')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'createsystemaction')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventSource = Virtuoso",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/roledashboard/statuscheckinsubscription/StatusCheckIn')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'roledashboard', 'statuscheckinsubscription')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'roledashboard')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "Type = 'StatusCheckIn' or Type ='All'",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/createsystemaction/systemaction')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'createsystemaction')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode = 1200 OR EventCode = 1401",
+          "compatibilityLevel": 20
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/topics/subscriptions/rules",
+      "apiVersion": "2017-04-01",
+      "name": "[concat(parameters('serviceBusNamespace'), '/virtuosointernaltopic/LeadDMMChangeSubscriber/Virtuoso')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics/subscriptions', parameters('serviceBusNamespace'), 'virtuosointernaltopic', 'LeadDMMChangeSubscriber')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespace'), 'virtuosointernaltopic')]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespace'))]"
+      ],
+      "properties": {
+        "action": {},
+        "filterType": "SqlFilter",
+        "sqlFilter": {
+          "sqlExpression": "EventCode = 1000 AND RoleId IN (181) AND EventSource = 'Virtuoso'",
+          "compatibilityLevel": 20
+        }
+      }
+    }
+  ]
+}

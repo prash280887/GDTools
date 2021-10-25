@@ -1,0 +1,856 @@
+jobs:
+  - deployment: Base
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: AzureCLI@2
+            displayName: 'Azure CLI $(resourceGroupOps)'
+            inputs:
+              connectedServiceNameARM: 51fe67a9-c035-4b2a-be96-e8b14b454909
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript:  |
+                az group create -l $(regionlocation) -n $(resourceGroupOps)
+
+          - task: AzureCLI@2
+            displayName: 'Azure CLI $(resourceGroupSec)'
+            inputs:
+              connectedServiceNameARM: 51fe67a9-c035-4b2a-be96-e8b14b454909
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript:  |
+                az group create -l $(regionlocation) -n $(resourceGroupSec)
+
+          - task: AzureCLI@2
+            displayName: 'Azure CLI $(resourceGroupApp)'
+            inputs:
+              connectedServiceNameARM: 51fe67a9-c035-4b2a-be96-e8b14b454909
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript:  |
+                az group create -l $(regionlocation) -n $(resourceGroupApp)
+
+          - task: AzureCLI@2
+            displayName: 'Azure CLI $(resourceGroupDb)'
+            inputs:
+              connectedServiceNameARM: 51fe67a9-c035-4b2a-be96-e8b14b454909
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript:  |
+                az group create -l $(regionlocation) -n $(resourceGroupDb)
+
+          - template: ../Infra/addResourceGroupTags.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              componentID: '$(componentID)'
+
+          - template: ../Infra/addResourceGroupTags.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupSec)'
+              componentID: '$(componentID)'
+
+          - template: ../Infra/addResourceGroupTags.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              componentID: '$(componentID)'
+
+          - template: ../Infra/addResourceGroupTags.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupDb)'
+              componentID: '$(componentID)'
+
+          - template: ../Infra/keyVault.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupSec)'
+              deployLocation: '$(deployLocation)'
+              keyVaultName: '$(keyVaultName)'
+              skuName: '$(keyVaultSku)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+
+  - deployment: Storage
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/storageAccount.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              storageAccountType: '$(storageAccountKind)'
+              storageAccountName: '$(storageAccountName)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+
+  - deployment: StorageConfiguration
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/storageaccounthotfix.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              storageAccountType: '$(storageAccountKind)'
+              storageAccountName: '$(storageAccountName)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+
+  - deployment: WebApps
+    dependsOn:
+    - Storage
+    condition: succeeded('Storage')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+          - template: ../Infra/webApps.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              webAppName: '$(webAppName)'
+              adminAppName: '$(adminAppName)'
+              appServicePlanName : '$(appServicePlanName)'
+              appServicePlanSku : '$(appServicePlanSku)'
+
+  - deployment: WebAPIs
+    dependsOn:
+    - WebApps
+    condition: succeeded('WebApps')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+          - template: ../Infra/webAPIs.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              apiAppServicePlanName: '$(apiAppServicePlanName)'
+              apiAppServicePlanSku : '$(apiAppServicePlanSku)'
+              rolesApi : '$(rolesApi)'
+              remoteApi : '$(remoteApi)'
+              rdbgApi : '$(rdbgApi)'
+              widgetApi : '$(widgetApi)'
+              riskRepoApi : '$(riskRepoApi)'
+              devopsProfileApi : '$(devopsProfileApi)'
+              nspApi : '$(nspApi)'
+              cpoeApi : '$(cpoeApi)'
+              metricDataIngestionClientapi : '$(metricDataIngestionClientapi)'
+              acrApi : '$(acrApi)'
+              envApi : '$(envApi)'
+
+  - deployment: SearchService
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/searchService.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              searchServiceName: '$(searchServiceName)'
+              searchServicesSku: '$(searchServicesSku)'
+              searchServicesReplicaCount: '$(searchServicesReplicaCount)'
+              searchServicesPartitionCount: '$(searchServicesPartitionCount)'
+
+  - deployment: AzureCacheforRedis
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/redisCache.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              redisName: '$(redisName)'
+              redisSkuName: '$(redisSkuName)'
+              redisSkuFamily: '$(redisSkuFamily)'
+              redisSkuCapacity: '$(redisSkuCapacity)'
+              redisMaxMemoryReserved: '$(redisMaxMemoryReserved)'
+              redisMaxMemoryPolicy: '$(redisMaxMemoryPolicy)'
+              redisMaxFragmentationMemory: '$(redisMaxFragmentationMemory)'
+              redisMaxMemoryDelta: '$(redisMaxMemoryDelta)'
+              redisMaxclients: '$(redisMaxclients)'
+
+  - deployment: StorageAzureDatafactory
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/storageAccount.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              deployLocation: '$(deployLocation)'
+              storageAccountType: '$(storageAccountKind)'
+              storageAccountName: '$(dataFactoryStorageAccountName)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+
+  - deployment: AzureDatafactory
+    dependsOn:
+    - StorageAzureDatafactory
+    condition: succeeded('StorageAzureDatafactory')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/datafactory.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              dataFactoryName: '$(dataFactoryName)'
+              dataFactoryStorageAccountName: '$(dataFactoryStorageAccountName)'
+              dataFactoryBlobContainer: '$(dataFactoryBlobContainer)'
+
+  - deployment: AzureDataExplorerCluster
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/dataexplorercluster.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupOps)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              dataExplorerClusterName: '$(dataExplorerClusterName)'
+              dataExplorerClusterSkuName: '$(dataExplorerClusterSkuName)'
+              dataExplorerClusterSkuTier: '$(dataExplorerClusterSkuTier)'
+              dataExplorerClusterSkuCapacity: '$(dataExplorerClusterSkuCapacity)'
+
+  - deployment: ServiceBus
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/serviceBus.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              environmentType: '$(environmentType)'
+              serviceBusNamespace: '$(serviceBusNamespace)'
+              serviceBusSku: '$(serviceBusSku)'
+
+  - deployment: StorageSqlServer
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/storageAccount.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupDb)'
+              deployLocation: '$(deployLocation)'
+              storageAccountType: '$(storageAccountKind)'
+              storageAccountName: '$(sqlServerNameStorageAccountName)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+
+  - deployment: SqlServer
+    dependsOn:
+    - StorageSqlServer
+    condition: succeeded('StorageSqlServer')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/sqlserver.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupDb)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              sqlServerName: '$(sqlServerName)'
+              sqlAdministratorLogin: '$(sqlAdministratorLogin)'
+              sqlAdminLoginPassword: '$(sqlAdminLoginPassword)'
+              sqlServerNameStorageAccountName: '$(sqlServerNameStorageAccountName)'
+
+  - deployment: SqlElasticPool
+    dependsOn:
+    - SqlServer
+    condition: succeeded('SqlServer')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/sqlelasticpool.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupDb)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              sqlServerName: '$(sqlServerName)'
+              sqlElasticPoolName: '$(sqlElasticPoolName)'
+              sqlElasticPoolEdition: '$(sqlElasticPoolEdition)'
+              sqlElasticPoolCapacity: '$(sqlElasticPoolCapacity)'
+
+  - deployment: SqlDatabase
+    dependsOn:
+    - SqlServer
+    - SqlElasticPool
+    condition: and(succeeded('SqlServer'), succeeded('SqlElasticPool'))
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/sqldatabase.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupDb)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              sqlServerName: '$(sqlServerName)'
+              sqlElasticPoolName: '$(sqlElasticPoolName)'
+              sqlDbSkuTier: '$(sqlDbSkuTier)'
+              sqldatabases:
+                    - '$(sqlDbACRName)'
+                    - '$(sqlDbReportingName)'
+                    - '$(sqlDbBiName)'
+                    - '$(sqlDbPhoenixName)'
+                    - '$(sqlDbRiskRepoName)'
+                    - '$(sqlDbStagingName)'
+                    - '$(sqlDbWidashboardName)'
+                    - '$(sqlDbwwprodName)'
+
+  - deployment: ApplicationInsightsCreates
+    dependsOn:
+    - WebApps
+    - WebAPIs
+    condition: and(succeeded('WebApps'), succeeded('WebAPIs'))
+    pool:
+      name: "virtuosoinfra1"
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            # - task: DownloadBuildArtifacts@0
+            #   displayName: "Download Build Artifacts"
+            #   inputs:
+            #     artifactName: Drop
+            #     downloadPath: '$(System.ArtifactsDirectory)'
+            #     buildType: 'current'
+            #     downloadType: 'single'
+
+            - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+              displayName: "Set Environment Variable"
+            - powershell: |
+                $date=$(Get-Date -Format g);
+                Write-Host "##vso[task.setvariable variable=creationDate]$date"
+              displayName: "Set Date Tag"
+            - template: ../Infra/applicationInsights.yml
+              parameters:
+                azureSubscriptionName: '${{parameters.serviceConnection}}'
+                resourceGroupName: '$(resourceGroupOps)'
+                deployLocation: '$(deployLocation)'
+                webappappinsightname: '$(webappappinsightname)'
+                webjobappinsightname: '$(webjobappinsightname)'
+                componentID: '$(componentID)'
+                subEnvironment: '$(subEnvironment)'
+
+  - deployment: FunctionApps
+    dependsOn:
+      - Base
+    condition: succeeded('Base')
+    pool:
+      name: "virtuosoinfra1"
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            # - task: DownloadBuildArtifacts@0
+            #   displayName: "Download Build Artifacts"
+            #   inputs:
+            #     artifactName: Drop
+            #     downloadPath: '$(System.ArtifactsDirectory)'
+            #     buildType: 'current'
+            #     downloadType: 'single'
+
+            - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+              displayName: "Set Environment Variable"
+            - powershell: |
+                $date=$(Get-Date -Format g);
+                Write-Host "##vso[task.setvariable variable=creationDate]$date"
+              displayName: "Set Date Tag"
+            - template: ../Infra/functionapp.yml
+              parameters:
+                azureSubscriptionName: '${{parameters.serviceConnection}}'
+                resourceGroupName: '$(resourceGroupApp)'
+                deployLocation: '$(deployLocation)'
+                functionstorageAccountName: '$(storageAccountName)'
+                componentID: '$(componentID)'
+                subEnvironment: '$(subEnvironment)'
+                funcDashboardMetricPopulator: '$(funcDashboardMetricPopulator)'
+                funcSPDashboardMetricPopulator: '$(funcSPDashboardMetricPopulator)'
+                funcDashboardMetricScheduler: '$(funcDashboardMetricScheduler)'
+                funcSPDashboardMetricScheduler: '$(funcSPDashboardMetricScheduler)'
+                funcDevOpsProfileMonitor: '$(funcDevOpsProfileMonitor)'
+                funcSPDevOpsProfileMonitor: '$(funcSPDevOpsProfileMonitor)'
+                funcMetricService: '$(funcMetricService)'
+                funcSPMetricService: '$(funcSPMetricService)'
+                funcSDOperation: '$(funcSDOperation)'
+                funcSPSDOperation: '$(funcSPSDOperation)'
+                funcSystemActionProcessor: '$(funcSystemActionProcessor)'
+                funcSPSystemActionProcessor: '$(funcSPSystemActionProcessor)'
+                funcApproval: '$(funcApproval)'
+                funcSPApproval: '$(funcSPApproval)'
+                funcAuroraForwardMessage: '$(funcAuroraForwardMessage)'
+                funcSPAuroraForwardMessage: '$(funcSPAuroraForwardMessage)'
+                funcSmcPprDraftPopulator: '$(funcSmcPprDraftPopulator)'
+                funcSPSmcPprDraftPopulator: '$(funcSPSmcPprDraftPopulator)'
+                funcACRFunction: '$(funcACRFunction)'
+                funcSPACRFunction: '$(funcSPACRFunction)'
+                funcRaidLogfindingsync: '$(funcRaidLogfindingsync)'
+                funcSPRaidLogfindingsync: '$(funcSPRaidLogfindingsync)'
+                funcRiskAutoLoad: '$(funcRiskAutoLoad)'
+                funcSPRiskAutoLoad: '$(funcSPRiskAutoLoad)'
+                funcRoleEventsListner: '$(funcRoleEventsListner)'
+                funcSPRoleEventsListner: '$(funcSPRoleEventsListner)'
+
+  - deployment: AppServicePlan
+    dependsOn:
+    - Base
+    condition: succeeded('Base')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/appServiceplan.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              appServicePlanSku : '$(appServicePlanSku)'
+              appServicePlanName: '$(webjobserverfarm_name)'
+
+  - deployment: WebJob
+    dependsOn:
+    - AppServicePlan
+    condition: succeeded('AppServicePlan')
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: 'Download Build Artifacts'
+          #   inputs:
+          #     artifactName: Drop
+          #     downloadPath: '$(System.ArtifactsDirectory)'
+          #     buildType: 'current'
+          #     downloadType: 'single'
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - template: ../Infra/webjob.yml
+            parameters:
+              azureSubscriptionName: '${{parameters.serviceConnection}}'
+              resourceGroupName: '$(resourceGroupApp)'
+              deployLocation: '$(deployLocation)'
+              componentID: '$(componentID)'
+              subEnvironment: '$(subEnvironment)'
+              webjob_name: '$(webjob_name)'
+              webjobserverfarm_name: '$(webjobserverfarm_name)'
+
+
+  - deployment: IntegrateAppInsight
+    dependsOn:
+    - ApplicationInsightsCreates
+    - WebApps
+    - WebAPIs
+    condition: and(succeeded('ApplicationInsightsCreates'), succeeded('WebApps'), succeeded('WebAPIs'))
+    pool:
+      name: "virtuosoinfra1"
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            displayName: Azure CLI
+            inputs:
+                azureSubscription: $(serviceConnection)
+                scriptType: ps
+                scriptLocation: inlineScript
+                inlineScript: |
+                    $wkey = az resource show -g $(resourceGroupOps) -n $(webappappinsightname) --resource-type "Microsoft.Insights/components" --query properties.InstrumentationKey
+                    $key = az resource show -g $(resourceGroupOps) -n $(webjobappinsightname) --resource-type "Microsoft.Insights/components" --query properties.InstrumentationKey
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(webAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(adminAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(rolesApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(remoteApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(rdbgApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(widgetApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(riskRepoApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(devopsProfileApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(nspApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(cpoeApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(acrApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(metricDataIngestionClientapi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2
+                    az webapp config appsettings set -g $(resourceGroupApp) -n $(envApi) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$wkey APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=$wkey ApplicationInsightsAgent_EXTENSION_VERSION=~2

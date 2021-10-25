@@ -1,0 +1,2 @@
+jobs:
+ - template: ../Deploy/webjobs5.download.yml

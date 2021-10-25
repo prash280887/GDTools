@@ -1,0 +1,5 @@
+jobs:
+ - template: ../Deploy/webjobs2.deploy.yml
+   parameters:
+     env: ${{parameters.env}}
+     serviceConnection : ${{parameters.serviceConnection}}

@@ -1,0 +1,9 @@
+variables:
+- name: filesPath
+  value: ''
+- name: appSolutionPath
+  value: ''
+- name: infraScriptPath
+  value: 'Scripts'
+- name: infraTemplatePath
+  value: 'Templates'

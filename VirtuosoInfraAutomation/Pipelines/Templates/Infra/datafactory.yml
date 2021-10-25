@@ -1,0 +1,36 @@
+steps:
+ - task: AzureResourceGroupDeployment@2
+   displayName: Data Factory - ARM
+   inputs:
+     azureSubscription: "${{ parameters.azureSubscriptionName }}"
+     resourceGroupName: "${{ parameters.resourceGroupName }}"
+     location: "${{ parameters.deployLocation }}"
+     csmFile: '$(Agent.BuildDirectory)/Drop/Templates/Data Factory/deploy.json'
+     overrideParameters: '-dataFactoryName "${{ parameters.dataFactoryName }}" -location "${{ parameters.deployLocation }}" -dataFactoryStorageAccountName "${{ parameters.dataFactoryStorageAccountName }}" -dataFactoryBlobContainer "${{ parameters.dataFactoryBlobContainer }}"'
+     deploymentOutputs: armOut
+
+ - task: AzurePowerShell@4
+   displayName: Add tags to Data Factory
+   inputs:
+     azureSubscription: "${{ parameters.azureSubscriptionName }}"
+     ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/Add-Tags.ps1'
+     ScriptArguments: '-resourceType "Primary" -resourcePurpose "" -componentID "${{ parameters.componentID }}" -subEnvironment "${{ parameters.subEnvironment }}" -resourceGroupName "${{ parameters.resourceGroupName }}" -resourceName "${{ parameters.dataFactoryName }}"'
+     azurePowerShellVersion: LatestVersion
+
+ - task: AzurePowerShell@4
+   displayName: Add tags to Data Factory Storage Account
+   inputs:
+     azureSubscription: "${{ parameters.azureSubscriptionName }}"
+     ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/Add-Tags.ps1'
+     ScriptArguments: '-resourceType "Primary" -resourcePurpose "" -componentID "${{ parameters.componentID }}" -subEnvironment "${{ parameters.subEnvironment }}" -resourceGroupName "${{ parameters.resourceGroupName }}" -resourceName "${{ parameters.dataFactoryStorageAccountName }}"'
+     azurePowerShellVersion: LatestVersion
+
+#  - task: AzurePowerShell@4
+#    displayName: Set Build Variable From ARM Output
+#    name: SetDataFactoryOutputVariable
+#    inputs:
+#      azureSubscription: "${{ parameters.azureSubscriptionName }}"
+#      ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/Set-OutputVariable.ps1'
+#      ScriptArguments: '-resourceGroupName "${{ parameters.resourceGroupName }}"'
+#      azurePowerShellVersion: LatestVersion
+

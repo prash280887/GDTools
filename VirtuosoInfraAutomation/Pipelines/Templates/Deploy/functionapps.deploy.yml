@@ -1,0 +1,124 @@
+jobs:
+  - deployment: Deploy_FunctionApps
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                     
+           
+         
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: SDOperationTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcSDOperation)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/SDOperation/SDOperation.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: testriskautoload'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcRiskAutoLoad)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/RiskFindingsAutoLoad/RiskFindingsAutoLoad.zip'
+            continueOnError: true          
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: testraidLogfindingsync'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcRaidLogfindingsync)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/AzureFunctionV2/RaidLogFindingSync.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: TestSmcPprDraftPopulator'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcSmcPprDraftPopulator)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/SmcPprDraftPopulator/SmcPprDraftPopulator.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: TestAuroraForwardMessage'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcAuroraForwardMessage)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/AuroraForwardMessage/publish.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: DashboardMetricSchedulerTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcDashboardMetricScheduler)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.Metric.DashboardMetricScheduler/DashboardScheduler.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: DashboardMetricPopulatorTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcDashboardMetricPopulator)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.Metric.DashboardMetricPopulator/DashboardMetricPopulator.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: testacrfunction'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcACRFunction)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/ACRMilestoneSync/publish.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: SystemActionProcessorTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcSDOperation)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/SystemActionProcessor/publish.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: DevOpsProfileStatusMonitorTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcDevOpsProfileMonitor)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/DevOpsProfileStatusMonitor/publish.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: testroleeventslistner'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcRoleEventsListner)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/RoleEventsListner/publish.zip'
+            continueOnError: true
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: TestApprovalFunction'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: '$(funcApproval)'
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/ApprovalDelegationUpdater/publish.zip'
+            continueOnError: true
+ 

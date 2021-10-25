@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "redisName": {
+            "value": "vwwvirtuosotestcache"
+        },
+        "redisSkuName": {
+            "value": "Standard"
+        },
+        "redisSkuFamily": {
+            "value": "C"
+        },
+        "redisSkuCapacity": {
+            "value": 5
+        },
+        "location": {
+            "value": "East US"
+        },
+        "redisMaxMemoryReserved": {
+            "value": "200"
+        },
+        "redisMaxMemoryPolicy": {
+            "value": "volatile-lru"
+        },
+        "redisMaxFragmentationMemory": {
+            "value": "0"
+        },
+        "redisMaxMemoryDelta": {
+            "value": "200"
+        },
+        "redisMaxclients": {
+            "value": "15000"
+        }
+    }
+}

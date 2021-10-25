@@ -1,0 +1,91 @@
+jobs:
+  - deployment: Deploy_WebJobs
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                          
+ 
+          - task: AzurePowerShell@2
+            displayName: BulkReviewCreater
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\BulkReviewCreater\BulkReviewCreater.zip" -jobname "BulkReviewCreatertest" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: QGActualsPopulator
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\QGActualsPopulator\QGActualsPopulator.zip" -jobname "QGActualsPopulatortest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: ChangePointSync
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\ChangePointSync\ChangePointSync.zip" -jobname "ChangePointSynctest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: AutoProjectCreator
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\AutoProjectCreator\AutoProjectCreator.zip" -jobname "AutoProjectCreatortest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: CompassOneServiceBusListener
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\CompassOneServiceBusListener\CompassOneServiceBusListener.zip" -jobname "CompassOneServiceBusListenertest" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: WorkItemDashboardJob
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\WorkItemDashboardJob\WorkItemDashboardJob.zip" -jobname "WorkItemDashboardJob" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: WorkItemMetricCalculationJob
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\WorkItemMetricCalculationJob\WorkItemMetricCalculationJob.zip" -jobname "WorkItemMetricCalculationJob" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+
+    

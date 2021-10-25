@@ -1,0 +1,6 @@
+jobs:
+ - template: ../Deploy/infra.build.yml
+   parameters:
+     app: 'false'
+     db: 'false'
+     infra: 'true'

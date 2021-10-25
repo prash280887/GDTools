@@ -1,0 +1,27 @@
+steps:
+ - task: AzureResourceGroupDeployment@2
+   displayName: Azure Data Explorer Cluster - ARM
+   inputs:
+     azureSubscription: "${{ parameters.azureSubscriptionName }}"
+     resourceGroupName: "${{ parameters.resourceGroupName }}"
+     location: "${{ parameters.deployLocation }}"
+     csmFile: '$(Agent.BuildDirectory)/Drop/Templates/Azure Data Explorer Cluster/deploy.json'
+     overrideParameters: '-dataExplorerClusterName "${{ parameters.dataExplorerClusterName }}" -location "${{ parameters.deployLocation }}" -dataExplorerClusterSkuName "${{ parameters.dataExplorerClusterSkuName }}" -dataExplorerClusterSkuTier "${{ parameters.dataExplorerClusterSkuTier }}" -dataExplorerClusterSkuCapacity "${{ parameters.dataExplorerClusterSkuCapacity }}" -environment "$(env)"'
+     deploymentOutputs: armOut
+
+ - task: AzurePowerShell@4
+   displayName: Add tags to Azure Data Explorer Cluster
+   inputs:
+     azureSubscription: "${{ parameters.azureSubscriptionName }}"
+     ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/Add-Tags.ps1'
+     ScriptArguments: '-resourceType "Primary" -resourcePurpose "" -componentID "${{ parameters.componentID }}" -subEnvironment "${{ parameters.subEnvironment }}" -resourceGroupName "${{ parameters.resourceGroupName }}" -resourceName "${{ parameters.dataExplorerClusterName }}"'
+     azurePowerShellVersion: LatestVersion
+
+#  - task: AzurePowerShell@4
+#    displayName: Set Build Variable From ARM Output
+#    name: SetDataEplorerClusterOutputVariable
+#    inputs:
+#      azureSubscription: "${{ parameters.azureSubscriptionName }}"
+#      ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/Set-OutputVariable.ps1'
+#      ScriptArguments: '-resourceGroupName "${{ parameters.resourceGroupName }}"'
+#      azurePowerShellVersion: LatestVersion

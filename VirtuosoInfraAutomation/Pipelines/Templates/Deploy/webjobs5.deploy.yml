@@ -1,0 +1,98 @@
+jobs:
+  - deployment: Deploy_WebJobs
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                      
+           
+          - task: AzurePowerShell@2
+            displayName: DashBoard
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\DashBoard\Dashboardpopulator.zip" -jobname "DashboardPopulatortest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: AutoProjectRoleNotifier
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\AutoProjectRoleNotifier\autoprojectrolenotifier.zip" -jobname "AutoProjectRoleNotifier" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: PPR
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\PPRTracker\PPRTracker.zip" -jobname "PPRTrackertest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: Notifier
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\Notifier\Notifier.zip" -jobname "Notifiertest" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: DocumentGenerator
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\DocumentGeneratorWebJob\DocumentGeneratorWebJob.zip" -jobname "DocumentGeneratortest" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: Leadrole
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\LeaderRole\LeaderRole.zip" -jobname "LeaderRoletest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: DHITemplateUpdate
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\DHITemplateUpdate\DHITemplateUpdate.zip" -jobname "DHITemplateUpdate" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: DEICalculator
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\DEICalculator\DEICalculator.zip" -jobname "DEICalculatortest" -WebsiteName "$(webjob_name)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()

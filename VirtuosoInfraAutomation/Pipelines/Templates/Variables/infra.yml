@@ -1,0 +1,161 @@
+variables:
+- name: deployLocation
+  value: $(region)
+- name: serviceConnection
+  value: 'VWW-DEV-Subscription-Service-Connection'
+- name: locationShortName
+  value: $(regionShortName)
+- name: regionShortName
+  value: $(regionlocation)
+- name: companyName
+  value: 'virtuoso'
+- name: prefix
+  value: 'vww'
+- name: rgprefix
+  value: 'rg-vww'
+- name: 'environmentName'
+  value: '$(env)'
+- name: suffix
+  value: '$(env)-$(sequence)'
+- name: resourceGroupOps
+  value: '$(rgprefix)-$(env)-ops-$(sequence)'
+- name: resourceGroupSec
+  value: '$(rgprefix)-$(env)-sec-$(sequence)'
+- name: resourceGroupApp
+  value: '$(rgprefix)-$(env)-app-$(sequence)'
+- name: resourceGroupDb
+  value: '$(rgprefix)-$(env)-db-$(sequence)'
+- name: storageAccountName
+  value: 'vwwstoperation$(env)$(sequence)'
+- name: keyVaultName
+  value: '${{ variables.prefix }}-kv-sec-${{ variables.suffix }}'
+- name: environmentType
+  value: '$(env)'
+- name: webAppName
+  value: '${{ variables.prefix }}appweb$(env)'
+- name: adminAppName
+  value: '${{ variables.prefix }}appadmin$(env)'
+- name: appServicePlanName
+  value: '${{ variables.prefix }}-app-serviceplan-${{ variables.suffix }}'
+- name: apiAppServicePlanName
+  value: '${{ variables.prefix }}-app-apiserviceplan-${{ variables.suffix }}'
+- name: rolesApi
+  value: '${{ variables.prefix }}-app-rolesapi-${{ variables.suffix }}'
+- name: remoteApi
+  value: '${{ variables.prefix }}-app-remoteapi-${{ variables.suffix }}'
+- name: rdbgApi
+  value: '${{ variables.prefix }}-app-rdbgapi-${{ variables.suffix }}'
+- name: widgetApi
+  value: '${{ variables.prefix }}-app-widgetapi-${{ variables.suffix }}'
+- name: riskRepoApi
+  value: '${{ variables.prefix }}-app-riskrepoapi-${{ variables.suffix }}'
+- name: devopsProfileApi
+  value: '${{ variables.prefix }}-app-devopsprofileapi-${{ variables.suffix }}'
+- name: nspApi
+  value: '${{ variables.prefix }}-app-nspapi-${{ variables.suffix }}'
+- name: cpoeApi
+  value: '${{ variables.prefix }}-app-cpoeapi-${{ variables.suffix }}'
+- name: acrApi
+  value: '${{ variables.prefix }}-app-acrapi-${{ variables.suffix }}'
+- name: metricDataIngestionClientapi
+  value: '${{ variables.prefix }}-app-metricdataingestionclientapi-${{ variables.suffix }}'
+- name: envApi
+  value: '${{ variables.prefix }}-app-$(env)api-${{ variables.suffix }}'
+- name: serviceBusNamespace
+  value: '${{ variables.prefix }}-sb-dashboardactionitem-${{ variables.suffix }}'
+- name: redisName
+  value: '${{ variables.prefix }}-redis-${{ variables.suffix }}'
+- name: dataFactoryName
+  value: '${{ variables.prefix }}-adf-${{ variables.suffix }}'
+- name: dataFactoryStorageAccountName
+  value: 'vwwadfst$(env)${{ variables.regionShortName }}$(sequence)'
+- name: dataFactoryBlobContainer
+  value: 'vwwadfstblob$(env)$(sequence)'
+- name: dataExplorerClusterName
+  value: 'vwwdec$(env)$(sequence)'
+- name: searchServiceName
+  value: '${{ variables.prefix }}-srch-${{ variables.suffix }}'
+- name: sqlServerName
+  value: '${{ variables.prefix }}-sql-${{ variables.suffix }}'
+- name: sqlAdministratorLogin
+  value: 'vwwadmin'
+- name: sqlElasticPoolName
+  value: '${{ variables.prefix }}-sql-ep-${{ variables.suffix }}'
+- name: sqlDbACRName
+  value: '${{ variables.prefix }}-sqldb-acr-${{ variables.suffix }}'
+- name: sqlDbReportingName
+  value: '${{ variables.prefix }}-sqldb-reporting-${{ variables.suffix }}'
+- name: sqlDbBiName
+  value: '${{ variables.prefix }}-sqldb-bi-${{ variables.suffix }}'
+- name: sqlDbPhoenixName
+  value: '${{ variables.prefix }}-sqldb-pheonix-${{ variables.suffix }}'
+- name: sqlDbRiskRepoName
+  value: '${{ variables.prefix }}-sqldb-riskrepo-${{ variables.suffix }}'
+- name: sqlDbStagingName
+  value: '${{ variables.prefix }}-sqldb-staging-${{ variables.suffix }}'
+- name: sqlDbWidashboardName
+  value: '${{ variables.prefix }}-sqldb-widashboard-${{ variables.suffix }}'
+- name: sqlDbwwprodName
+  value: '${{ variables.prefix }}-sqldb-wwprod-${{ variables.suffix }}'
+- name: sqlServerNameStorageAccountName
+  value: 'sqlstoperation$(env)$(sequence)'
+- name: webappappinsightname
+  value: '${{ variables.prefix }}-app-appi-${{ variables.suffix }}'
+- name: webjobappinsightname
+  value: '${{ variables.prefix }}-appi-wj-${{ variables.suffix }}'
+- name: funcDashboardMetricPopulator
+  value: '${{ variables.prefix }}-func-DashboardMetricPopulator-${{ variables.suffix }}'
+- name: funcSPDashboardMetricPopulator
+  value: '${{ variables.prefix }}-func-DashboardMetricPopulatorServicePlan-${{ variables.suffix }}'
+- name: funcDashboardMetricScheduler
+  value: '${{ variables.prefix }}-func-DashboardMetricPopulator-${{ variables.suffix }}'
+- name: funcSPDashboardMetricScheduler
+  value: '${{ variables.prefix }}-func-DashboardMetricPopulatorServicePlan-${{ variables.suffix }}'
+- name: funcDevOpsProfileMonitor
+  value: '${{ variables.prefix }}-func-DevOpsProfileMonitor-${{ variables.suffix }}'
+- name: funcSPDevOpsProfileMonitor
+  value: '${{ variables.prefix }}-func-DevOpsProfileMonitorServicePlan-${{ variables.suffix }}'
+- name: funcMetricService
+  value: '${{ variables.prefix }}-func-MetricService-${{ variables.suffix }}'
+- name: funcSPMetricService
+  value: '${{ variables.prefix }}-func-MetricServiceServicePlan-${{ variables.suffix }}'
+- name: funcSDOperation
+  value: '${{ variables.prefix }}-func-SDOperation-${{ variables.suffix }}'
+- name: funcSPSDOperation
+  value: '${{ variables.prefix }}-func-SDOperationServicePlan-${{ variables.suffix }}'
+- name: funcSystemActionProcessor
+  value: '${{ variables.prefix }}-func-SystemActionProcessor-${{ variables.suffix }}'
+- name: funcSPSystemActionProcessor
+  value: '${{ variables.prefix }}-func-SystemActionProcessorServicePlan-${{ variables.suffix }}'
+- name: funcApproval
+  value: '${{ variables.prefix }}-func-approval-${{ variables.suffix }}'
+- name: funcSPApproval
+  value: '${{ variables.prefix }}-func-approvalServicePlan-${{ variables.suffix }}'
+- name: funcAuroraForwardMessage
+  value: '${{ variables.prefix }}-func-AuroraForwardMessage-${{ variables.suffix }}'
+- name: funcSPAuroraForwardMessage
+  value: '${{ variables.prefix }}-func-AuroraForwardMessageServicePlan-${{ variables.suffix }}'
+- name: funcSmcPprDraftPopulator
+  value: '${{ variables.prefix }}-func-SmcPprDraftPopulator-${{ variables.suffix }}'
+- name: funcSPSmcPprDraftPopulator
+  value: '${{ variables.prefix }}-func-SmcPprDraftPopulatorServicePlan-${{ variables.suffix }}'
+- name: funcACRFunction
+  value: '${{ variables.prefix }}-func-ACRFunction-${{ variables.suffix }}'
+- name: funcSPACRFunction
+  value: '${{ variables.prefix }}-func-ACRFunctionServicePlan-${{ variables.suffix }}'
+- name: funcRaidLogfindingsync
+  value: '${{ variables.prefix }}-func-RaidLogfindingsync-${{ variables.suffix }}'
+- name: funcSPRaidLogfindingsync
+  value: '${{ variables.prefix }}-func-RaidLogfindingsyncServicePlan-${{ variables.suffix }}'
+- name: funcRiskAutoLoad
+  value: '${{ variables.prefix }}-func-RiskAutoLoad-${{ variables.suffix }}'
+- name: funcSPRiskAutoLoad
+  value: '${{ variables.prefix }}-func-RiskAutoLoadServicePlan-${{ variables.suffix }}'
+- name: funcRoleEventsListner
+  value: '${{ variables.prefix }}-func-RoleEventsListner-${{ variables.suffix }}'
+- name: funcSPRoleEventsListner
+  value: '${{ variables.prefix }}-func-RoleEventsListnerServicePlan-${{ variables.suffix }}'
+- name: webjob_name
+  value: '${{ variables.prefix }}-app-wj-${{ variables.suffix }}'
+- name: webjobserverfarm_name
+  value: '${{ variables.prefix }}-plan-wj-${{ variables.suffix }}'

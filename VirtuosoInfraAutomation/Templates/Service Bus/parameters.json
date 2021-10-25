@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "serviceBusNamespace": {
+      "value": "vwwsbeus001"
+    },
+    "environmentType": {
+      "value": "dev"
+    },
+    "serviceBusSku": {
+      "value": "Standard",
+      "metadata": {
+        "description": "The messaging tier for service Bus namespace"
+      }
+    },
+    "location": {
+      "value": "East US"
+    }
+  }
+}

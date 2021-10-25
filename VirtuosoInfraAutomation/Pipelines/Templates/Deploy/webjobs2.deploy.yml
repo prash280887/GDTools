@@ -1,0 +1,82 @@
+jobs:
+  - deployment: Deploy_WebJobs
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                       
+           
+          - task: AzurePowerShell@2
+            displayName: EASAutoProjectCreator
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\EASAutoProjectCreator\EASAutoProjectCreator.zip" -jobname "EASAutoProjectCreatortest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: EASMetadataUpdate
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\EASMetadataUpdate\EASMetadataUpdate.zip" -jobname "EASMetadataUpdatetest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: EasProjectStatusUpdate
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\EasProjectStatusUpdate\EasProjectStatusUpdate.zip" -jobname "EasProjectStatusUpdatetest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: EASProjectsAutoCheckin
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\EASProjectsAutoCheckin\EASProjectsAutoCheckin.zip" -jobname "EASProjectsAutoCheckintest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: ProjectRecoveryCandidateSyncJob
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\ProjectRecoveryCandidateSyncJob\ProjectRecoveryCandidateSyncJob.zip" -jobname "ProjectRecoveryCandidateSyncJobtest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: AzurePowerShell@2
+            displayName: OnBoardServiceCodeSyncJob
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\OnBoardServiceCodeSyncJob\OnBoardServiceCodeSyncJob.zip" -jobname "OnBoardServiceCodeSyncJobtest" -WebsiteName "$(webjob_name)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+            continueOnError: true
+            condition: succeededOrFailed()
+  
+

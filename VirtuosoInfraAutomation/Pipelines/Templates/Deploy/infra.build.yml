@@ -1,0 +1,37 @@
+﻿jobs:
+  - job: Build
+    pool:
+      name: "virtuosoinfra1"
+    steps:
+    - task: CopyFiles@2
+      displayName: COPY ARM templates
+      inputs:
+          SourceFolder: $(Build.SourcesDirectory)/$(infraTemplatePath)
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/Templates'
+      condition: and(succeeded(), eq('${{parameters.infra}}', 'true'))
+
+    - task: CopyFiles@2
+      displayName: COPY Scripts
+      inputs:
+          SourceFolder:  $(Build.SourcesDirectory)/$(infraScriptPath)
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/Scripts'
+      condition: succeeded()
+
+    - task: AzurePowerShell@4
+      displayName: Analyze Powershell Scripts
+      inputs:
+          azureSubscription: "$(serviceConnection)"
+          ScriptPath: '$(Build.ArtifactStagingDirectory)/Scripts/Run-PowershellScriptAnalyzer.ps1'
+          ScriptArguments: '-FilePath "$(System.ArtifactsDirectory)\Scripts"'
+          azurePowerShellVersion: LatestVersion
+      condition: and(succeeded(), eq('${{parameters.infra}}', 'true'))
+
+    # Copy OldArtificats (Analysis Service, PowerBI, DataFactory) tasks needed here for DB Rollback
+
+    #  - ${{ if eq(parameters['infra'], 'true') }}:
+    #       - template: ./Infra/armValidator.yml
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifacts
+      inputs:
+          ArtifactName: Drop

@@ -1,0 +1,196 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+      "webjob_name": {
+
+        "type": "String"
+      },
+        "webjobserverfarm_name": {
+            "type": "String"
+        },
+        "scmType": {
+            "type": "string",
+            "metadata": {
+                "description": "SCM type for web configuration"
+            },
+            "allowedValues": ["None", "Dropbox", "Tfs", "LocalGit", "GitHub", "CodePlexGit", "CodePlexHg", "BitbucketGit", "BitbucketHg", "ExternalGit", "ExternalHg", "OneDrive", "VSO", "VSTSRM"],
+            "defaultValue":"None"
+        },
+        "managedPipelineMode": {
+            "type": "string",
+            "metadata": {
+                "description": "Managed Pipeline"
+            },
+            "allowedValues": ["Integrated", "Classic"],
+            "defaultValue":"Integrated"
+        },
+        "loadBalancing": {
+            "type": "string",
+            "metadata": {
+                "description": "Load balancing"
+            },
+            "allowedValues": ["WeightedRoundRobin", "LeastRequests", "LeastResponseTime", "WeightedTotalTraffic", "RequestHash"],
+            "defaultValue":"LeastRequests"
+        },
+        "ftpState": {
+            "type": "string",
+            "metadata": {
+                "description": "State of FTP / FTPS service"
+            },
+            "allowedValues": ["AllAllowed", "FtpsOnly", "Disabled"],
+            "defaultValue":"AllAllowed"
+        },
+        "hostNameType": {
+            "type": "string",
+            "metadata": {
+                "description": "Hostname type"
+            },
+            "allowedValues": ["Verified","Managed"],
+            "defaultValue":"Verified"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('webjob_name')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-09-01",
+            "location": "[parameters('location')]",
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('webjob_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('webjob_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/serverfarms/',parameters('webjobserverfarm_name'))]",
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "siteConfig": {},
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true,
+                "redundancyMode": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('webjob_name'), '/web')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webjob_name'))]",
+                "[resourceId('Microsoft.Web/sites/siteextensions',parameters('webjob_name'), 'Microsoft.ApplicationInsights.AzureWebSites')]"
+            ],
+            "properties":{
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "phpVersion": "5.6",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$virtuosohotfixwebjob",
+                "azureStorageAccounts": {},
+                "scmType": "[parameters('scmType')]",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": true,
+                "managedPipelineMode":"[parameters('managedPipelineMode')]",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": true
+                    }
+                ],
+                "loadBalancing": "[parameters('loadBalancing')]",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "autoHealRules": {},
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "[parameters('ftpState')]"
+            }
+        },
+         {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('webjob_name'), '/', parameters('webjob_name'), '.azurewebsites.net')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webjob_name'))]"
+            ],
+            "properties": {
+                "siteName": "[parameters('webjob_name')]",
+                "hostNameType": "[parameters('hostNameType')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/siteextensions",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('webjob_name'), '/Microsoft.ApplicationInsights.AzureWebSites')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webjob_name'))]"
+            ]
+        }
+    ],
+    "outputs": {}
+}

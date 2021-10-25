@@ -1,0 +1,78 @@
+jobs:
+  - deployment: Deploy_WebJobs
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'                      
+           
+          - task: AzureFunctionApp@1
+            displayName: 'Azure Function App Deploy: MetricServiceFunctionTest'
+            inputs:
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              appType: functionApp
+              appName: MetricServiceFunctionTest
+              package: '$(System.ArtifactsDirectory)/DropAppArtifacts/HttpFunction/HttpFunction.zip'
+          - task: AzurePowerShell@2
+            displayName: MetricAdoDataIngestionClient
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\adoclientwebJob\metricadodataingestionclientwebjob.zip" -jobname "MetricAdoDataIngestionClient" -WebsiteName "$(metricDataIngestionClientapi)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+          - task: AzurePowerShell@2
+            displayName: MetricCalculationClient
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/continuous.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\metricsclientwebjob\metriccalculationclientwebjob.zip" -jobname "MetricCalculationClient" -WebsiteName "$(metricDataIngestionClientapi)" -jobtype "continuous" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+          - task: AzurePowerShell@2
+            displayName: metricschedulerclient
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ScriptPath: '$(Agent.BuildDirectory)/Drop/Scripts/cronwebjob.ps1'
+              ScriptArguments: '-Zipfilelocation "$(System.ArtifactsDirectory)\DropAppArtifacts\Scheduler\metricschedulerclient.zip" -jobname "MetricSchedulerClient" -WebsiteName "$(metricDataIngestionClientapi)" -jobtype "Triggered" -rgname "$(resourceGroupApp)"'
+              azurePowerShellVersion: LatestVersion
+          - task: Azure-Kusto.PublishToADX.PublishToADX.PublishToADX@1
+            displayName: 'Kusto Tables'
+            inputs:
+              targetType: filePath
+              files: '**/Tables/*.kql'
+              kustoUrls: 'https://$(dataExplorerClusterName).$(region).kusto.windows.net?DatabaseName=metricdb$(env)' 
+              customAuth: true
+              connectedServiceName: metricdbtest
+          - task: Azure-Kusto.PublishToADX.PublishToADX.PublishToADX@1
+            displayName: 'Kusto Functions'
+            inputs:
+              targetType: filePath
+              files: '**/Functions/**/*.kql'
+              kustoUrls: 'https://$(dataExplorerClusterName).$(region).kusto.windows.net?DatabaseName=metricdb$(env)'
+              customAuth: true
+              connectedServiceName: metricdbtest
+          - task: Azure-Kusto.PublishToADX.PublishToADX.PublishToADX@1
+            displayName: 'Kusto IngestionMappings'
+            inputs:
+              targetType: filePath
+              files: '**/IngestionMappings/*.kql'
+              kustoUrls: 'https://$(dataExplorerClusterName).$(region).kusto.windows.net?DatabaseName=metricdb$(env)'
+              customAuth: true
+              connectedServiceName: metricdbtest

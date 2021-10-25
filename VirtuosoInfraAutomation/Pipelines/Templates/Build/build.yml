@@ -1,0 +1,6 @@
+﻿steps:
+- task: NuGetToolInstaller@1
+  displayName: NuGet Install
+  inputs:
+    versionSpec: $(nugetVersion)
+  condition: and(succeeded(), eq('${{parameters.app}}', 'true'))

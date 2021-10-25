@@ -1,0 +1,160 @@
+jobs:
+  - deployment: Deploy_Apps
+    pool:
+     name: 'virtuosoinfra1'
+    environment: ${{parameters.env}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - script: echo '##vso[task.setvariable variable=env]${{parameters.env}}
+            displayName: 'Set Environment Variable'
+
+          - powershell: |
+              $date=$(Get-Date -Format g);
+              Write-Host "##vso[task.setvariable variable=creationDate]$date"
+            displayName: 'Set Date Tag'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: DropAppArtifacts
+              downloadPath: '$(System.ArtifactsDirectory)'
+              buildType: 'current'
+              downloadType: 'single'
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(envApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/webapi/WebAPI.zip"
+              appType: "webApp"
+            
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotest"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(webAppName)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/web/Web.zip"
+              appType: "webApp"
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestrolesapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(rolesApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.RolesAPI"
+              appType: "webApp"
+
+          #- task: SqlAzureDacpacDeployment@1
+            #displayName: 'virtuosodacpac'
+            #inputs:
+              #azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              #ServerName: '$(sqlServerName).database.windows.net'
+              #DatabaseName: 'virtuosodacpac'
+              #SqlUsername: '$(sqlAdministratorLogin)'
+              #SqlPassword: '$(sqlAdminLoginPassword)'
+              #DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/virtuosodacpac/Virtuoso.Database.Virtuoso.dacpac'
+              #AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: 'acr DacpacTask'
+            inputs:
+              azureSubscription: 'VWW-DEV-Subscription-Service-Connection'
+              ServerName: '$(sqlServerName).database.windows.net'
+              DatabaseName: '$(sqlDbACRName)'
+              SqlUsername: '$(sqlAdministratorLogin)'
+              SqlPassword: '$(sqlAdminLoginPassword)'
+              DacpacFile: '$(System.ArtifactsDirectory)/DropAppArtifacts/acrdacpac/Virtuoso.Database.ACR.dacpac'
+              AdditionalArguments: '/p:BlockOnPossibleDataLoss=False /p:CommandTimeout=600'
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestadmin"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(adminAppName)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/AdminPages/AdminPages.zip"
+              appType: "webApp"
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestriskrepoapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(riskRepoApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/RiskRepowebapi/WebAPI.zip"
+              appType: "webApp"
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestwidgetapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(widgetApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/WidgetAPI/WidgetAPI.zip"
+              appType: "webApp"
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestrbdgapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(rdbgApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.RBDG.WebApi"
+              appType: "webApp"
+         
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestacrapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(acrApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.ACR.API"
+              appType: "webApp"
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: Virtuoso.MetricFramework.API"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(metricDataIngestionClientapi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.MetricFramework.API/publish.zip"
+              appType: "webApp"
+            continueOnError: true
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestCPOEApi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(cpoeApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.CustomerProof.API"
+              appType: "webApp"
+            continueOnError: true
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestremote"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(remoteApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/projectonline/Virtuoso.ProjectOnline.RemoteEventsWeb.zip"
+              appType: "webApp"
+            continueOnError: true
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Azure App Service Deploy: virtuosotestnspapi"
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: VWW-DEV-Subscription-Service-Connection
+              WebAppName: '$(nspApi)'
+              Package: "$(System.ArtifactsDirectory)/DropAppArtifacts/Virtuoso.NSP/publish.zip"
+              appType: "webApp"
+            continueOnError: true
+

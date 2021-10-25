@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "redisName": {
+            "type": "String"
+        },
+        "redisSkuName": {
+            "type": "String"
+        },
+        "redisSkuFamily": {
+            "type": "String"
+        },
+        "redisSkuCapacity": {
+            "type": "int"
+        },
+        "location": {
+            "type": "String"
+        },
+        "redisMaxMemoryReserved": {
+            "type": "String"
+        },
+        "redisMaxMemoryPolicy": {
+            "type": "String"
+        },
+        "redisMaxFragmentationMemory": {
+            "type": "String"
+        },
+        "redisMaxMemoryDelta": {
+            "type": "String"
+        },
+        "redisMaxclients": {
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Cache/Redis",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('redisName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "name": "[parameters('redisSkuName')]",
+                    "family": "[parameters('redisSkuFamily')]",
+                    "capacity": "[parameters('redisSkuCapacity')]"
+                },
+                "enableNonSslPort": false,
+                "redisConfiguration": {
+                    "maxclients": "[parameters('redisMaxclients')]",
+                    "maxmemory-reserved": "[parameters('redisMaxMemoryReserved')]",
+                    "maxmemory-policy": "[parameters('redisMaxMemoryPolicy')]",
+                    "maxfragmentationmemory-reserved": "[parameters('redisMaxFragmentationMemory')]",
+                    "maxmemory-delta": "[parameters('redisMaxMemoryDelta')]"
+                }
+            }
+        }
+    ]
+}
